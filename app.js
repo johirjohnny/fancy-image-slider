@@ -13,39 +13,56 @@ let sliders = [];
 // to create your own api key
 const KEY = '15674931-a9d714b6e9d654524df198e00&q';
 
+const toggleSpinner = () => {
+  const spinner = document.getElementById("loading-spinner");   //toggle spinner untill ending of image load
+  spinner.classList.toggle('d-none');
+}
 // show images 
 const showImages = (images) => {
-  imagesArea.style.display = 'block';
-  gallery.innerHTML = '';
-  // show gallery title
-  galleryHeader.style.display = 'flex';
-  images.forEach(image => {
-    let div = document.createElement('div');
-    div.className = 'col-lg-3 col-md-4 col-xs-6 img-item mb-2';
-    div.innerHTML = ` <img class="img-fluid img-thumbnail" onclick=selectItem(event,"${image.webformatURL}") src="${image.webformatURL}" alt="${image.tags}">`;
-    gallery.appendChild(div)
-  })
+  if (images.length == 0) {
+    alert("sorry, no image found here ");
+    toggleSpinner();
+    imagesArea.style.display = 'none';
+  } else {
+    imagesArea.style.display = 'block';
+    gallery.innerHTML = '';
+    // show gallery title
+    galleryHeader.style.display = 'flex';
+    toggleSpinner();
+    images.forEach(image => {
+      let div = document.createElement('div');
+      div.className = 'col-lg-3 col-md-4 col-xs-6 img-item mb-2';
+      div.innerHTML = ` <img class="img-fluid img-thumbnail" onclick=selectItem(event,"${image.webformatURL}") src="${image.webformatURL}" alt="${image.tags}">`;
+      gallery.appendChild(div)
+    })
+  }
+
 
 }
 
 const getImages = (query) => {
+  toggleSpinner();
   fetch(`https://pixabay.com/api/?key=${KEY}=${query}&image_type=photo&pretty=true`)
     .then(response => response.json())
-    .then(data => showImages(data.hitS))
+    .then(data => showImages(data.hits))
     .catch(err => console.log(err))
 }
 
 let slideIndex = 0;
 const selectItem = (event, img) => {
   let element = event.target;
-  element.classList.add('added');
- 
+  toggleImage(element);
   let item = sliders.indexOf(img);
   if (item === -1) {
     sliders.push(img);
-  } else {
-    alert('Hey, Already added !')
   }
+  else {
+    sliders.selected = false;                //make deselect an already selected item
+  }
+}
+// toggle select or unselect image
+const toggleImage = (element) => {
+  element.classList.toggle('added');
 }
 var timer
 const createSlider = () => {
@@ -67,7 +84,7 @@ const createSlider = () => {
   document.querySelector('.main').style.display = 'block';
   // hide image aria
   imagesArea.style.display = 'none';
-  const duration = document.getElementById('duration').value || 1000;
+  const duration = Math.abs(document.getElementById('duration').value) || 1000;//make duraion in nagetive num. to pos 
   sliders.forEach(slide => {
     let item = document.createElement('div')
     item.className = "slider-item";
@@ -119,4 +136,11 @@ searchBtn.addEventListener('click', function () {
 
 sliderBtn.addEventListener('click', function () {
   createSlider()
+  document.getElementById('duration').value = '';
 })
+document.getElementById("search").addEventListener("keypress", function (event) {  //press enter button to search 
+  if (event.key === "Enter") {
+    event.preventDefault();
+    searchBtn.click();
+  }
+});
